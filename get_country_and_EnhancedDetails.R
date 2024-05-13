@@ -1,6 +1,6 @@
 #' Title getCountryDetails
 #'
-#' @param Adress Text that may contain a country named or abbriviation, Ex PubMed Affiliation
+#' @param Adress Text that may contain a country name indication: Name, Abbreviation,etc. e.g. PubMed Affiliation
 #'
 #' @return data frame with extracted countries and their info
 #' @export
@@ -9,82 +9,75 @@
 #' 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#This is the function defintion:
 
-getCountryDetails <- function(Adress)
-{  
-  # Install and load used packages : stringr, rworldmap
+# Define the function to get country details from an address
+getCountryDetails <- function(Address) {  
+  
+  # Function to install and load required packages if missing
   install_if_missing <- function(pkg) {
     if (!require(pkg, character.only = TRUE)) {
       install.packages(pkg, dependencies = TRUE)
       library(pkg, character.only = TRUE)
     }
   }
+  
+  # Required packages
   req_pkgs <- c("stringr","rworldmap")
   for (pkg in req_pkgs) {
     install_if_missing(pkg)
   }
+  
   # Load the countriesCoarse dataset
   data(countriesCoarse)
   info_countries <- as.data.frame(countriesCoarse)
   column_to_select <- c("NAME","LAT","LON","ISO_A3","REGION")
-  # ------------search any indication of country name
-  search_att_inDF <- function(dff,att,Adress){
-    # dff=info_countries
-    # att="NAME_SORT"
-    
-    # ----------if search by ABBREV then unify both adress and column
-    if (att=="ABBREV"){
-      Adress1 = gsub("."," ",Adress,fixed = T)
-      dff[[att]]= str_trim(gsub("."," ",dff[[att]],fixed = T))
-      Adress=Adress1
+  
+  # Function to search for country name indications
+  search_att_inDF <- function(dff, att, Address) {
+    if (att == "ABBREV") {
+      Address1 <- gsub(".", " ", Address, fixed = TRUE)
+      dff[[att]] <- str_trim(gsub(".", " ", dff[[att]], fixed = TRUE))
+      Address <- Address1
     }
-    
-    exp_countr<- paste0("\\b(", paste(dff[[att]], collapse = "|"),")\\b")
-    result = unlist(str_extract_all(Adress,exp_countr)) #[[1]]
-    # initiate dataframe output
-    output0=setNames(data.frame(matrix(ncol = length(c("NAME","LAT","LON","ISO_A3","REGION")), nrow = 0),stringsAsFactors = F),
-                     c("NAME","LAT","LON","ISO_A3","REGION"))
-
-    if (length(result)>=1){
-      
-      output <- info_countries[match(result,dff[[att]]),column_to_select]
+    exp_country <- paste0("\\b(", paste(dff[[att]], collapse = "|"), ")\\b")
+    result <- unlist(str_extract_all(Address, exp_country))
+    output0 <- setNames(data.frame(matrix(ncol = length(c("NAME","LAT","LON","ISO_A3","REGION")), nrow = 0), stringsAsFactors = FALSE),
+                        c("NAME","LAT","LON","ISO_A3","REGION"))
+    if (length(result) >= 1) {
+      output <- info_countries[match(result, dff[[att]]), column_to_select]
       return(output)
-    }else{
-      
+    } else {
       return(output0)
     }
   }
   
-  # -----------Exception of 'UK' data info , 'UK' abbrv isnt available in countriesCoarse df
-  if (grepl("\\bUK\\b",Adress)){ Adress=gsub("\\bUK\\b", "United Kingdom",Adress)}
-  
-  # Adress="UK cps solutions, , dublin , Tunisia"
-  value_to_search <- c("NAME","NAME_SORT","NAME_FORMA","ABBREV","ISO_A3")
-  j=1
-  output1 <- data.frame()
-  while(j<=length(value_to_search)){
-    output <-  search_att_inDF(info_countries,value_to_search[j],Adress)
-   
-    if (nrow(output) != 0) {
-      output1 = rbind(output1,output)
-      # print(output1)
-    }
-   
-    if (nrow(output1) == 0& j==length(value_to_search)) {
-      output[1,]=c(NA,NA,NA,NA,NA)
-      output1 <- output
-      
-    }
-    j<- j+1
-   
+  # Exception for 'UK' data info
+  if (grepl("\\bUK\\b", Address)) { 
+    Address <- gsub("\\bUK\\b", "United Kingdom", Address)
   }
-  names(output1)[1]="NAME_Country"
+  
+  # Values to search for in different attributes
+  value_to_search <- c("NAME", "NAME_SORT", "NAME_FORMA", "ABBREV", "ISO_A3")
+  output1 <- data.frame()
+  j <- 1
+  while (j <= length(value_to_search)) {
+    output <-  search_att_inDF(info_countries, value_to_search[j], Address)
+    if (nrow(output) != 0) {
+      output1 <- rbind(output1, output)
+    }
+    if (nrow(output1) == 0 & j == length(value_to_search)) {
+      output[1,] <- c(NA, NA, NA, NA, NA)
+      output1 <- output
+    }
+    j <- j + 1
+  }
+  
+  names(output1)[1] <- "NAME_Country"
   output1 <- output1[!duplicated(output1), ]
   row.names(output1) <- NULL
   return(output1)
-
 }
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 # Test on text contain a single country
