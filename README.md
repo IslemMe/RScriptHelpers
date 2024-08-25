@@ -8,4 +8,5 @@ Primarily, the script serves the purpose of parsing Adress data from PubMed arti
 
 ## **Get_Gender_By_Name.R**
 
-This R script contains a simple function that interacts with the Namsor API to determine the gender of individuals based on their first names. The function is designed to be easy to use and can be extended to fetch additional details like origin or ethnicity. It's an efficient solution for enhancing datasets in research, marketing, or social analysis projects.
+This R script contains a simple function that interacts with the Namsor API :https://namsor.app/signup/ to determine the gender of individuals based on their first names. The function is designed to be easy to use and can be extended to fetch additional details like origin or ethnicity. It's an efficient solution for enhancing datasets in research, marketing, or social analysis projects.
+
